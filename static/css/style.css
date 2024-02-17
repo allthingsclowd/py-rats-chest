@@ -1,0 +1,37 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+button {
+    padding: 10px 20px;
+    margin: 5px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.green {
+    background-color: #4CAF50;
+}
+
+.blue {
+    background-color: #008CBA;
+}
+
+.yellow {
+    background-color: #ffeb3b;
+}
+
+.red {
+    background-color: #f44336;
+}
+
+.funny-red {
+    background-color: red;
+    position: relative;
+}
+
+#output {
+    margin-top: 20px;
+}
