@@ -39,14 +39,8 @@ jobs:
 
 
     - name: Build (but not push) the Docker image
-      uses: docker/build-push-action@v2
-      with:
-        context: .
-        file: ./Dockerfile
-        platforms: linux/amd64,linux/arm64
-        push: false
-        tags: ghcr.io/allthingsclowd/py-rats-chest:${{ steps.next-version.outputs.version }}
-        load: true # Important: Allows the image to be loaded into Docker's local registry for testing
+      run: |
+        docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/allthingsclowd/py-rats-chest:${{ steps.next-version.outputs.version }} .
 
     - name: Run container for testing
       run: |
