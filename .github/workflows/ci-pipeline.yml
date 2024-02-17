@@ -48,8 +48,8 @@ jobs:
 
     - name: Test container endpoints
       run: |
-        curl --fail http://localhost:8080/generate_traffic || { echo 'generate_traffic test failed'; exit 1; }
-        curl --fail http://localhost:8080/deploy_malware || { echo 'deploy_malware test failed'; exit 1; }
-        curl --fail http://localhost:8080/deploy_nmap || { echo 'deploy_nmap test failed'; exit 1; }
-        curl --fail http://localhost:8080/read_passwords || { echo 'read_passwords test failed'; exit 1; }
+        curl -X POST --fail http://localhost:8080/generate_traffic || { echo 'generate_traffic test failed'; exit 1; }
+        curl -X POST --fail http://localhost:8080/deploy_malware || { echo 'deploy_malware test failed'; exit 1; }
+        curl -X POST --fail http://localhost:8080/deploy_nmap || { echo 'deploy_nmap test failed'; exit 1; }
+        curl -X POST --fail http://localhost:8080/read_passwords || { echo 'read_passwords test failed'; exit 1; }
 
