@@ -29,11 +29,14 @@ jobs:
       id: next-version
       run: |
         LATEST_TAG=$(git tag --sort=-version:refname | head -n 1)
-        NEXT_VERSION=$(echo $LATEST_TAG | awk -F. '{print $1"."$2"."$3+1}')
-        if [ -z "$NEXT_VERSION" ]; then
+        if [[ -z "$LATEST_TAG" ]]; then
           NEXT_VERSION="0.0.1"
+        else
+          NEXT_VERSION=$(echo $LATEST_TAG | awk -F. -v OFS=. '{$NF = $NF + 1 ; print}')
         fi
+        echo "Next version: $NEXT_VERSION"
         echo "::set-output name=version::$NEXT_VERSION"
+
 
     - name: Build (but not push) the Docker image
       uses: docker/build-push-action@v2
