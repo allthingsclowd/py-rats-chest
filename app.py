@@ -14,7 +14,7 @@ def index():
 @app.route('/generate_traffic', methods=['POST'])
 def generate_traffic():
     try:
-        page = requests.get('https://blogs.aquasec.com')
+        page = requests.get('https://blog.aquasec.com')
         soup = BeautifulSoup(page.content, 'html.parser')
         images = [img['src'] for img in soup.find_all('img') if img.get('src') and 'uploads' in img['src']]
         selected_images = random.sample(images, 2)
