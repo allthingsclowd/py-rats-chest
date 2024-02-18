@@ -28,12 +28,25 @@ jobs:
     - name: Calculate next version
       id: next-version
       run: |
-        LATEST_TAG=$(git tag --sort=-version:refname | head -n 1)
+        # Ensure tags are fetched
+        git fetch --tags
+        
+        # Get the latest tag by sorting them as versions
+        LATEST_TAG=$(git tag -l --sort=-v:refname | head -n 1)
+        
         if [[ -z "$LATEST_TAG" ]]; then
           NEXT_VERSION="0.0.1"
         else
-          NEXT_VERSION=$(echo $LATEST_TAG | awk -F. -v OFS=. '{$NF = $NF + 1 ; print}')
+          # Break the version into an array
+          IFS='.' read -r -a version_parts <<< "$LATEST_TAG"
+          
+          # Increment the patch version
+          patch=$((version_parts[2] + 1))
+          
+          # Construct the next version
+          NEXT_VERSION="${version_parts[0]}.${version_parts[1]}.$patch"
         fi
+        
         echo "Next version: $NEXT_VERSION"
         echo "::set-output name=version::$NEXT_VERSION"
 
