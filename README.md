@@ -1,7 +1,3 @@
-Here's a crafted README for your repository, formatted in Markdown:
-
----
-
 # Py-Rats-Chest
 
 Welcome to the Py-Rats-Chest, a demonstration Flask application repository designed to showcase various aspects of application security and CI/CD processes using Docker, GitHub Actions, and Flask. This application is a playful nod to pirates, hence "Py-Rats", and is intended strictly for educational and demonstration purposes.
