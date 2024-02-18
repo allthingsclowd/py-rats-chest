@@ -10,6 +10,8 @@ This application, including its features like simulated malware deployment and s
 
 The Py-Rats-Chest Flask application provides a simple web interface to demonstrate the following functionalities:
 
+<img width="1159" alt="image" src="https://github.com/allthingsclowd/py-rats-chest/assets/9472095/e497bee5-ef23-4714-9f44-47288fa557a2">
+
 - **Generate Traffic**: Fetches and displays two random images from the [Aqua Security Blog](https://blog.aquasec.com).
 - **Deploy Malware**: Simulates the deployment of malware by creating a harmless file that mimics the EICAR test file.
 - **Deploy Nmap**: Installs Nmap, showcasing the ability to manage system-level packages through a web application.
