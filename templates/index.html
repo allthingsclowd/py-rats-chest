@@ -4,18 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aqua Security Demo</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
     <h1>Aqua Security Demo</h1>
     <div id="buttons">
-        <button id="generate_traffic" class="green">Generate Traffic</button>
-        <button id="deploy_malware" class="blue">Deploy Malware</button>
-        <button id="deploy_nmap" class="green">Deploy Nmap</button>
-        <button id="read_passwords" class="blue">Read Passwords</button>
-        <button id="internet_toggle" class="funny-red">Internet On/Off</button>
+        <button id="generate_traffic" class="button green" data-original-color="green">Generate Traffic</button>
+        <button id="deploy_malware" class="button blue" data-original-color="blue">Deploy Malware</button>
+        <button id="deploy_nmap" class="button green" data-original-color="green">Deploy Nmap</button>
+        <button id="read_passwords" class="button blue" data-original-color="blue">Read Passwords</button>
+        <button id="internet_toggle" class="button funny-red">Internet On/Off</button>
     </div>
     <div id="output"></div>
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="/static/js/script.js"></script>
 </body>
 </html>
