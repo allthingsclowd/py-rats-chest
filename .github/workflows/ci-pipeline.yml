@@ -50,6 +50,11 @@ jobs:
         echo "Next version: $NEXT_VERSION"
         echo "::set-output name=version::$NEXT_VERSION"
 
+    - name: Setup Git
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+
     - name: Create and Push Tag
       run: |
         NEW_TAG=${{ steps.next-version.outputs.version }}
