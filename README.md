@@ -1,3 +1,4 @@
+[![Build, Test, and Push Docker image](https://github.com/allthingsclowd/py-rats-chest/actions/workflows/ci-pipeline.yml/badge.svg)](https://github.com/allthingsclowd/py-rats-chest/actions/workflows/ci-pipeline.yml)
 # Py-Rats-Chest
 
 Welcome to the Py-Rats-Chest, a demonstration Flask application repository designed to showcase various aspects of application security and CI/CD processes using Docker, GitHub Actions, and Flask. This application is a playful nod to pirates, hence "Py-Rats", and is intended strictly for educational and demonstration purposes.
