@@ -50,6 +50,12 @@ jobs:
         echo "Next version: $NEXT_VERSION"
         echo "::set-output name=version::$NEXT_VERSION"
 
+    - name: Create and Push Tag
+      run: |
+        NEW_TAG=${{ steps.next-version.outputs.version }}
+        git tag $NEW_TAG
+        git push origin $NEW_TAG
+
     - name: Build and Push the Docker image
       run: |
         docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/allthingsclowd/py-rats-chest:${{ steps.next-version.outputs.version }} . --push
