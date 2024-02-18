@@ -50,10 +50,12 @@ jobs:
         echo "Next version: $NEXT_VERSION"
         echo "::set-output name=version::$NEXT_VERSION"
 
-    - name: Setup Git
+    - name: Configure Git Authentication
       run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
+        git config --global user.name "GitHub Action"
+        git config --global user.email "action@github.com"
+        git remote set-url origin https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+
 
     - name: Create and Push Tag
       run: |
