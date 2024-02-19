@@ -75,7 +75,8 @@ jobs:
         newTag=$(echo $latestTag | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
         echo "New tag: $newTag"
         git tag $newTag
-        git push origin $newTag
+        REPO_NAME="${GITHUB_REPOSITORY#*/}"
+        git push https://${GH_USER}:${GH_PAT}@github.com/${GH_USER}/${REPO_NAME}.git $newTag
       env:
         GH_PAT: ${{ secrets.TAGGING_TOKEN }}
         GH_USER: ${{ secrets.TAGGING_USER }}
