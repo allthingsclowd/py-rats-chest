@@ -9,7 +9,9 @@ on:
 jobs:
   build-test-push:
     runs-on: ubuntu-latest
-
+    permissions:
+      packages: write
+      contents: write
     steps:
     - name: Check out code
       uses: actions/checkout@v2
