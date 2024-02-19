@@ -65,7 +65,7 @@ jobs:
 
     - name: Build and Push the Docker image
       run: |
-        docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/allthingsclowd/$BRANCH_SPECIFIC_VAR:${{ steps.next-version.outputs.version }} . --push
+        docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/allthingsclowd/$BRANCH_SPECIFIC_VAR:${{ steps.next-version.outputs.version }} . 
 
     - name: Run container for testing
       run: |
