@@ -67,6 +67,11 @@ jobs:
     #     curl -X POST --fail http://localhost:8080/deploy_nmap || { echo 'deploy_nmap test failed'; exit 1; }
     #     curl -X POST --fail http://localhost:8080/read_passwords || { echo 'read_passwords test failed'; exit 1; }
 
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.ref }}
+  
     - name: Bump version and push tag
       run: |
         git fetch --tags
