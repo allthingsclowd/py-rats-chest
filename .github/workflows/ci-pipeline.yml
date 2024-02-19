@@ -66,7 +66,7 @@ jobs:
     #     curl -X POST --fail http://localhost:8080/deploy_malware || { echo 'deploy_malware test failed'; exit 1; }
     #     curl -X POST --fail http://localhost:8080/deploy_nmap || { echo 'deploy_nmap test failed'; exit 1; }
     #     curl -X POST --fail http://localhost:8080/read_passwords || { echo 'read_passwords test failed'; exit 1; }
-
+#
     - name: Checkout code
       uses: actions/checkout@v2
       with:
@@ -84,4 +84,4 @@ jobs:
         git push https://${GH_USER}:${GH_PAT}@github.com/${GH_USER}/${REPO_NAME}.git $newTag
       env:
         GH_PAT: ${{ secrets.TAGGING_TOKEN }}
-        GH_USER: ${{ secrets.TAGGING_USER }}
+        GH_USER: ${{ secrets.TAGGING_USER }}  
