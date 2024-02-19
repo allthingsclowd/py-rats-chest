@@ -4,17 +4,30 @@ on:
   push:
     branches:
       - grazzer # Adjust this as necessary
+      - upnext
 
 jobs:
   build-test-push:
     runs-on: ubuntu-latest
     permissions:
       packages: write
-      contents: read
+      contents: write
     steps:
     - name: Check out code
       uses: actions/checkout@v2
 
+    - name: Set variable based on branch
+      run: |
+        BRANCH_NAME=${GITHUB_REF##*/}
+        REPO_NAME=${GITHUB_REPOSITORY#*/}
+        REPO_NAME=${REPO_NAME%.git}
+        if [[ "$BRANCH_NAME" == "grazzer" ]]; then
+          VAR_VALUE="${REPO_NAME}"
+        else
+          VAR_VALUE="${REPO_NAME}-dev"
+        fi
+        echo "BRANCH_SPECIFIC_VAR=${VAR_VALUE}" >> $GITHUB_ENV
+    
     - name: Login to GitHub Container Registry
       uses: docker/login-action@v1
       with:
@@ -52,11 +65,11 @@ jobs:
 
     - name: Build and Push the Docker image
       run: |
-        docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/allthingsclowd/py-rats-chest:${{ steps.next-version.outputs.version }} . --push
+        docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}:${{ steps.next-version.outputs.version }} . --push
 
     - name: Run container for testing
       run: |
-        docker run --name py-rats-chest -d -p 8080:5000 ghcr.io/allthingsclowd/py-rats-chest:${{ steps.next-version.outputs.version }}
+        docker run --name py-rats-chest -d -p 8080:5000 ghcr.io/allthingsclowd/$BRANCH_SPECIFIC_VAR:${{ steps.next-version.outputs.version }}
         sleep 5 # Give it some time to start up
 
     - name: Test container endpoints
@@ -64,5 +77,13 @@ jobs:
         curl -X POST --fail http://localhost:8080/generate_traffic || { echo 'generate_traffic test failed'; exit 1; }
         curl -X POST --fail http://localhost:8080/deploy_malware || { echo 'deploy_malware test failed'; exit 1; }
         curl -X POST --fail http://localhost:8080/deploy_nmap || { echo 'deploy_nmap test failed'; exit 1; }
-        curl -X POST --fail http://localhost:8080/read_passwords || { echo 'read_passwords test failed'; exit 1; }
-
+        curl -X POST --fail http://localhost:8080/read_passwords || { echo 'read_passwords test failed'; exit 1; }    
+    
+    - name: Bump version and push tag
+      run: |
+        echo "New tag: ${{ steps.next-version.outputs.version }}"
+        git tag ${{ steps.next-version.outputs.version }}
+        git push origin ${{ steps.next-version.outputs.version }}
+      env:
+        GH_PAT: ${{ secrets.TAGGING_TOKEN }}
+        GH_USER: ${{ github.actor }}
