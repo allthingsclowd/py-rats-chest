@@ -9,9 +9,7 @@ on:
 jobs:
   build-test-push:
     runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: write
+
     steps:
     - name: Check out code
       uses: actions/checkout@v2
@@ -67,21 +65,17 @@ jobs:
     #     curl -X POST --fail http://localhost:8080/deploy_nmap || { echo 'deploy_nmap test failed'; exit 1; }
     #     curl -X POST --fail http://localhost:8080/read_passwords || { echo 'read_passwords test failed'; exit 1; }
 #
-    - name: Checkout code
-      uses: actions/checkout@v2
-      with:
-        ref: ${{ github.ref }}
-  
     - name: Bump version and push tag
       run: |
+        git config --global user.email "actions@github.com"
+        git config --global user.name "GitHub Actions"
         git fetch --tags
         latestTag=$(git describe --tags `git rev-list --tags --max-count=1`)
         echo "Latest tag: $latestTag"
         newTag=$(echo $latestTag | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
         echo "New tag: $newTag"
         git tag $newTag
-        REPO_NAME="${GITHUB_REPOSITORY#*/}"
-        git push https://${GH_USER}:${GH_PAT}@github.com/${GH_USER}/${REPO_NAME}.git $newTag
+        git push origin $newTag
       env:
         GH_PAT: ${{ secrets.TAGGING_TOKEN }}
-        GH_USER: ${{ secrets.TAGGING_USER }}  
+        GH_USER: ${{ github.actor }}
