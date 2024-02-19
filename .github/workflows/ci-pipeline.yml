@@ -65,7 +65,7 @@ jobs:
 
     - name: Build and Push the Docker image
       run: |
-        docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}:${{ steps.next-version.outputs.version }} . --load
+        docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}:${{ steps.next-version.outputs.version }} . --push
 
     - name: Run container for testing
       run: |
@@ -77,16 +77,7 @@ jobs:
         curl -X POST --fail http://localhost:8080/generate_traffic || { echo 'generate_traffic test failed'; exit 1; }
         curl -X POST --fail http://localhost:8080/deploy_malware || { echo 'deploy_malware test failed'; exit 1; }
         curl -X POST --fail http://localhost:8080/deploy_nmap || { echo 'deploy_nmap test failed'; exit 1; }
-        curl -X POST --fail http://localhost:8080/read_passwords || { echo 'read_passwords test failed'; exit 1; }
-
-    - name: Push the Docker image
-      run: |
-          echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u ${{ secrets.GHCR_USER }} --password-stdin
-          docker push ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}:${{ steps.next-version.outputs.version }}
-      env:
-        GHCR_PAT: ${{ secrets.GHCR_PAT }}
-        GHCR_USER: ${{ github.actor }}   
-    
+        curl -X POST --fail http://localhost:8080/read_passwords || { echo 'read_passwords test failed'; exit 1; }    
     
     - name: Bump version and push tag
       run: |
