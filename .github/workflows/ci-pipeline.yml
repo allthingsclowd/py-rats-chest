@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - grazzer # Adjust this as necessary
+      - upnext
 
 jobs:
   build-test-push:
@@ -15,54 +16,66 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v2
 
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v1
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GHCR_TOKEN }}
+    # - name: Login to GitHub Container Registry
+    #   uses: docker/login-action@v1
+    #   with:
+    #     registry: ghcr.io
+    #     username: ${{ github.actor }}
+    #     password: ${{ secrets.GHCR_TOKEN }}
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
+    # - name: Set up Docker Buildx
+    #   uses: docker/setup-buildx-action@v1
 
-    - name: Calculate next version
-      id: next-version
+    # - name: Calculate next version
+    #   id: next-version
+    #   run: |
+    #     # Ensure tags are fetched
+    #     git fetch --tags
+        
+    #     # Get the latest tag by sorting them as versions
+    #     LATEST_TAG=$(git tag -l --sort=-v:refname | head -n 1)
+        
+    #     if [[ -z "$LATEST_TAG" ]]; then
+    #       NEXT_VERSION="0.0.1"
+    #     else
+    #       # Break the version into an array
+    #       IFS='.' read -r -a version_parts <<< "$LATEST_TAG"
+          
+    #       # Increment the patch version
+    #       patch=$((version_parts[2] + 1))
+          
+    #       # Construct the next version
+    #       NEXT_VERSION="${version_parts[0]}.${version_parts[1]}.$patch"
+    #     fi
+        
+    #     echo "Next version: $NEXT_VERSION"
+    #     echo "::set-output name=version::$NEXT_VERSION"
+
+    # - name: Build and Push the Docker image
+    #   run: |
+    #     docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/allthingsclowd/py-rats-chest:${{ steps.next-version.outputs.version }} . --push
+
+    # - name: Run container for testing
+    #   run: |
+    #     docker run --name py-rats-chest -d -p 8080:5000 ghcr.io/allthingsclowd/py-rats-chest:${{ steps.next-version.outputs.version }}
+    #     sleep 5 # Give it some time to start up
+
+    # - name: Test container endpoints
+    #   run: |
+    #     curl -X POST --fail http://localhost:8080/generate_traffic || { echo 'generate_traffic test failed'; exit 1; }
+    #     curl -X POST --fail http://localhost:8080/deploy_malware || { echo 'deploy_malware test failed'; exit 1; }
+    #     curl -X POST --fail http://localhost:8080/deploy_nmap || { echo 'deploy_nmap test failed'; exit 1; }
+    #     curl -X POST --fail http://localhost:8080/read_passwords || { echo 'read_passwords test failed'; exit 1; }
+
+    - name: Bump version and push tag
       run: |
-        # Ensure tags are fetched
         git fetch --tags
-        
-        # Get the latest tag by sorting them as versions
-        LATEST_TAG=$(git tag -l --sort=-v:refname | head -n 1)
-        
-        if [[ -z "$LATEST_TAG" ]]; then
-          NEXT_VERSION="0.0.1"
-        else
-          # Break the version into an array
-          IFS='.' read -r -a version_parts <<< "$LATEST_TAG"
-          
-          # Increment the patch version
-          patch=$((version_parts[2] + 1))
-          
-          # Construct the next version
-          NEXT_VERSION="${version_parts[0]}.${version_parts[1]}.$patch"
-        fi
-        
-        echo "Next version: $NEXT_VERSION"
-        echo "::set-output name=version::$NEXT_VERSION"
-
-    - name: Build and Push the Docker image
-      run: |
-        docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/allthingsclowd/py-rats-chest:${{ steps.next-version.outputs.version }} . --push
-
-    - name: Run container for testing
-      run: |
-        docker run --name py-rats-chest -d -p 8080:5000 ghcr.io/allthingsclowd/py-rats-chest:${{ steps.next-version.outputs.version }}
-        sleep 5 # Give it some time to start up
-
-    - name: Test container endpoints
-      run: |
-        curl -X POST --fail http://localhost:8080/generate_traffic || { echo 'generate_traffic test failed'; exit 1; }
-        curl -X POST --fail http://localhost:8080/deploy_malware || { echo 'deploy_malware test failed'; exit 1; }
-        curl -X POST --fail http://localhost:8080/deploy_nmap || { echo 'deploy_nmap test failed'; exit 1; }
-        curl -X POST --fail http://localhost:8080/read_passwords || { echo 'read_passwords test failed'; exit 1; }
-
+        latestTag=$(git describe --tags `git rev-list --tags --max-count=1`)
+        echo "Latest tag: $latestTag"
+        newTag=$(echo $latestTag | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
+        echo "New tag: $newTag"
+        git tag $newTag
+        git push origin $newTag
+      env:
+        GH_PAT: ${{ secrets.GHCR_TOKEN }}
+        GH_USER: ${{ github.actor }}
