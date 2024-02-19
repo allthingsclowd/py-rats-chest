@@ -78,4 +78,4 @@ jobs:
         git push origin $newTag
       env:
         GH_PAT: ${{ secrets.TAGGING_TOKEN }}
-        GH_USER: ${{ secret.TAGGING_USER }}
+        GH_USER: ${{ secrets.TAGGING_USER }}
