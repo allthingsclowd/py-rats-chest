@@ -65,12 +65,11 @@ jobs:
 
     - name: Build and Push the Docker image
       run: |
-        docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}:${{ steps.next-version.outputs.version }} .
-        docker push ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}:${{ steps.next-version.outputs.version }}
+        docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}:${{ steps.next-version.outputs.version }} . --load
 
     - name: Run container for testing
       run: |
-        docker run --name py-rats-chest -d -p 8080:5000 -t ghcr.io/allthingsclowd/$BRANCH_SPECIFIC_VAR:${{ steps.next-version.outputs.version }}
+        docker run --name py-rats-chest -d -p 8080:5000 ghcr.io/allthingsclowd/$BRANCH_SPECIFIC_VAR:${{ steps.next-version.outputs.version }}
         sleep 5 # Give it some time to start up
 
     - name: Test container endpoints
@@ -80,17 +79,20 @@ jobs:
         curl -X POST --fail http://localhost:8080/deploy_nmap || { echo 'deploy_nmap test failed'; exit 1; }
         curl -X POST --fail http://localhost:8080/read_passwords || { echo 'read_passwords test failed'; exit 1; }
 
+    - name: Push the Docker image
+      run: |
+          echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u ${{ secrets.GHCR_USER }} --password-stdin
+          docker push ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}:${{ steps.next-version.outputs.version }}
+      env:
+        GHCR_PAT: ${{ secrets.GHCR_PAT }}
+        GHCR_USER: ${{ github.actor }}   
+    
+    
     - name: Bump version and push tag
       run: |
-        git config --global user.email "actions@github.com"
-        git config --global user.name "GitHub Actions"
-        git fetch --tags
-        latestTag=$(git describe --tags `git rev-list --tags --max-count=1`)
-        echo "Latest tag: $latestTag"
-        newTag=$(echo $latestTag | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
-        echo "New tag: $newTag"
-        git tag $newTag
-        git push origin $newTag
+        echo "New tag: ${{ steps.next-version.outputs.version }}"
+        git tag ${{ steps.next-version.outputs.version }}
+        git push origin ${{ steps.next-version.outputs.version }}
       env:
         GH_PAT: ${{ secrets.TAGGING_TOKEN }}
         GH_USER: ${{ github.actor }}
