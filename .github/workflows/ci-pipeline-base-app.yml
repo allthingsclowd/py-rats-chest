@@ -1,10 +1,10 @@
-name: Build, Test, and Push Docker image
+name: Build, Push Docker image, Test and Tag
 
 on:
   push:
     branches:
       - grazzer # Adjust this as necessary
-      - upnext
+      - whatsnext
 
 jobs:
   build-test-push:
@@ -65,7 +65,7 @@ jobs:
 
     - name: Build and Push the Docker image
       run: |
-        docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}:${{ steps.next-version.outputs.version }} . --push
+        docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}:${{ steps.next-version.outputs.version }} -t ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}:latest . --push
 
     - name: Run container for testing
       run: |
@@ -87,3 +87,21 @@ jobs:
       env:
         GH_PAT: ${{ secrets.TAGGING_TOKEN }}
         GH_USER: ${{ github.actor }}
+
+    # Add this step to login to the AquaSec Registry
+    - name: Log in to AquaSec Registry
+      run: echo "${{ secrets.AQUASEC_PASSWORD }}" | docker login registry.aquasec.com -u ${{ secrets.AQUASEC_USERNAME }} --password-stdin
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./dockerfile-embedded-me
+        push: true
+        tags: |
+          ghcr.io/allthingsclowd/py-rats-chest-embedded:latest
+          ghcr.io/allthingsclowd/py-rats-chest-embedded:${{ steps.next-version.outputs.version }}
+        build-args: |
+          BASE_IMAGE=ghcr.io/allthingsclowd/py-rats-chest:${{ steps.next-version.outputs.version }}
+          AQUA_IMAGE=registry.aquasec.com/microenforcer:2022.4.461
+        platforms: linux/amd64,linux/arm64

@@ -47,3 +47,20 @@ Replace `<tag>` with the specific version you wish to run. Access the applicatio
 The Py-Rats-Chest project is a hands-on way to explore application security concepts, Docker containerization, and GitHub Actions automation in a safe, controlled environment. Remember, this application should not be deployed in production or used without comprehensive understanding and caution.
 
 ---
+/continued...
+
+The dockerfile-embedded-me should be build as follows:
+
+``` bash
+
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  --build-arg BASE_IMAGE=ghcr.io/allthingsclowd/py-rats-chest:0.0.3 \
+  --build-arg AQUA_IMAGE=registry.aquasec.com/microenforcer:2022.4.461 \
+  -t ghcr.io/allthingsclowd/py-rats-chest-embedded:latest \
+  -t ghcr.io/allthingsclowd/py-rats-chest-embedded:0.0.3 \
+  . --push
+
+
+
+```

@@ -1,0 +1,35 @@
+name: Manual Aqua Security Workflow
+
+# This workflow is triggered manually from the GitHub Actions UI
+on: workflow_dispatch
+
+jobs:
+  aqua-security:
+    runs-on: ubuntu-latest
+    steps:
+    # Checks out a copy of your repository on the ubuntu-latest runner
+    - uses: actions/checkout@v2
+
+    # Runs the Aqua Security pipeline enforcer action
+    # This action enforces security policies in your CI/CD pipeline
+    - uses: aquasecurity/pipeline-enforcer-action@main
+      with:
+        aqua-key: ${{ secrets.AQUA_KEY }}
+        aqua-secret: ${{ secrets.AQUA_SECRET }}
+        verbose: true
+
+    # Runs the Aqua Security scanner in a Docker container
+    # This scanner performs several types of security scans, including:
+    # - Software Composition Analysis (SCA)
+    # - Infrastructure as Code (IaC) scanning
+    # - Secrets and sensitive data scanning
+    # - Pipeline file scanning
+    # - Static Application Security Testing (SAST)
+    - uses: docker://aquasec/aqua-scanner
+      with:
+        args: trivy fs --scanners config,vuln,secret --sast --reachability --package-json .
+      env:
+        AQUA_KEY: ${{ secrets.AQUA_KEY }}
+        AQUA_SECRET: ${{ secrets.AQUA_SECRET }}
+        GITHUB_TOKEN: ${{ github.token }}
+        TRIVY_RUN_AS_PLUGIN: 'aqua'

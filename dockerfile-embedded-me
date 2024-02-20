@@ -1,0 +1,49 @@
+# Define arguments for base and Aqua MicroEnforcer images, allowing them to be overridden at build time
+ARG BASE_IMAGE=ghcr.io/allthingsclowd/py-rats-chest:0.0.3
+ARG AQUA_IMAGE=registry.aquasec.com/microenforcer:2022.4.461
+
+# Capture the architecture as a build argument
+ARG TARGETARCH
+
+# Use the base image specified by the BASE_IMAGE argument
+FROM ${BASE_IMAGE} as base
+
+# Use the Aqua image specified by the AQUA_IMAGE argument for copying files
+FROM ${AQUA_IMAGE} as aqua
+
+# Now, return to the base image to continue our setup
+FROM base
+
+# Copy the microenforcer and aquactl binaries from the Aqua image to the target locations
+COPY --from=aqua /bin/microenforcer /bin/microenforcer
+COPY --from=aqua /bin/aquactl /bin/aquactl
+
+# Make the copied binaries executable
+RUN chmod +x /bin/microenforcer /bin/aquactl
+
+# Add labels to the image
+LABEL name="Aqua MicroEnforcer" \
+      vendor="Aqua Security Software Ltd." \
+      summary="Aqua Security Microenforcer" \
+      description="The Aqua Security MicroEnforcer provides runtime protection." \
+      com.aquasec.component="microenforcer" \
+      com.aquasec.baseimage="${AQUA_IMAGE}" \
+      product="aquasec" \
+      maintainer="graham@allthingscloud.eu"
+
+# Initialize the microenforcer
+RUN ["/bin/microenforcer", "aqua-init"]
+
+# Expose necessary ports
+EXPOSE 5000 443 8443
+
+# Define environment variables
+ENV FLASK_APP=app.py
+ENV FLASK_RUN_HOST=0.0.0.0
+
+# Set the entrypoint and default command
+ENTRYPOINT ["/bin/microenforcer"]
+CMD ["flask", "run"]
+
+# Set the LD_PRELOAD environment variable
+ENV LD_PRELOAD="/.aquasec/bin/${TARGETARCH}/slklib.so"
