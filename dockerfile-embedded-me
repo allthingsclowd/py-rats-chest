@@ -18,7 +18,7 @@ FROM base
 COPY --from=aqua /bin/microenforcer /bin/microenforcer
 
 # Download the aquactl binary from the AquaSec and place in the /bin directory
-RUN RUN apt-get update && apt-get install -y wget  && \
+RUN apt-get update && apt-get install -y wget  && \
     wget https://get.aquasec.com/aquactl/v3/aquactl && \
     mv ./aquactl /bin/aquactl
     
