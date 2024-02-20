@@ -99,9 +99,9 @@ jobs:
         file: ./dockerfile-embedded-me
         push: true
         tags: |
-          ghcr.io/allthingsclowd/py-rats-chest-embedded:latest
-          ghcr.io/allthingsclowd/py-rats-chest-embedded:${{ steps.next-version.outputs.version }}
+          ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}-embedded:latest
+          ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}-embedded:${{ steps.next-version.outputs.version }}
         build-args: |
-          BASE_IMAGE=ghcr.io/allthingsclowd/py-rats-chest:${{ steps.next-version.outputs.version }}
+          BASE_IMAGE=ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}:${{ steps.next-version.outputs.version }}
           AQUA_IMAGE=registry.aquasec.com/microenforcer:2022.4.461
         platforms: linux/amd64,linux/arm64
