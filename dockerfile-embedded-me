@@ -16,7 +16,9 @@ FROM base
 
 # Copy the microenforcer and aquactl binaries from the Aqua image to the target locations
 COPY --from=aqua /bin/microenforcer /bin/microenforcer
-COPY --from=aqua /bin/aquactl /bin/aquactl
+
+# Download the aquactl binary from the AquaSec and place in the /bin directory
+RUN curl -O https://get.aquasec.com/aquactl/v3/aquactl && mv ./aquactl /bin/aquactl
 
 # Make the copied binaries executable
 RUN chmod +x /bin/microenforcer /bin/aquactl
