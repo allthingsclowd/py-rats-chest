@@ -18,8 +18,10 @@ FROM base
 COPY --from=aqua /bin/microenforcer /bin/microenforcer
 
 # Download the aquactl binary from the AquaSec and place in the /bin directory
-RUN curl -O https://get.aquasec.com/aquactl/v3/aquactl && mv ./aquactl /bin/aquactl
-
+RUN apk add --no-cache wget && \
+    wget https://get.aquasec.com/aquactl/v3/aquactl && \
+    mv ./aquactl /bin/aquactl
+    
 # Make the copied binaries executable
 RUN chmod +x /bin/microenforcer /bin/aquactl
 
