@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: py-rats-chest-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: py-rats-chest
+  template:
+    metadata:
+      labels:
+        app: py-rats-chest
+    spec:
+      containers:
+      - name: py-rats-chest
+        image: ghcr.io/allthingsclowd/py-rats-chest:0.0.7
+        ports:
+        - containerPort: 5000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: py-rats-chest-service
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 4242
+    targetPort: 5000
+  selector:
+    app: py-rats-chest
