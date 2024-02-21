@@ -62,5 +62,10 @@ docker buildx build \
   . --push
 
 
+docker run --name CaaSMEDemo --hostname $((RANDOM%90000+10000)) \
+-e AQUA_LOGICAL_NAME=DemoEmbeddedME -e AQUA_TOKEN=$AQUA_TOKEN \
+-e AQUA_SERVER=$AQUA_SERVER -e IMAGE_NAME=ghcr.io/allthingsclowd/py-rats-chest-dev-embedded:0.0.13 -p 5000:5000 -p 8443:8443 -p 443:443 \
+ghcr.io/allthingsclowd/py-rats-chest-dev-embedded:0.0.13
+
 
 ```
