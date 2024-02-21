@@ -22,10 +22,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Add this step to login to the AquaSec Registry
-      - name: Log in to AquaSec Registry
-        run: echo "${{ secrets.AQUASEC_PASSWORD }}" | docker login registry.aquasec.com -u ${{ secrets.AQUASEC_USERNAME }} --password-stdin
-
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v1
         with:
@@ -34,7 +30,7 @@ jobs:
           password: ${{ secrets.GHCR_TOKEN }}
 
       - name: Pull the Container Image
-        run: docker pull $IMAGE_NAME:$IMAGE_TAG
+        run: docker pull ghcr.io/allthingsclowd/$IMAGE_NAME:$IMAGE_TAG
 
       - name: Inject MicroEnforcer with aquactl 
         run: |
