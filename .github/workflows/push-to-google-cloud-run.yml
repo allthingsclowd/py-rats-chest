@@ -5,53 +5,61 @@ on:
 
 env:
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  GCP_REGION: us-central1 # Change this to your Google Cloud region
+  GCP_REGION: us-central1 
   IMAGE_NAME: py-rats-chest
   IMAGE_TAG: 0.0.7
   SERVICE_NAME: py-rats-chest-service
   ARTIFACTORY_REPO_NAME: py-rats-chest-repo
-  
 
 jobs:
   setup-build-push-deploy:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-      
-    # Optionally, build your Docker image if it's not already built
-    - name: Build the Docker image
-      run: |
-        docker build -t $IMAGE_NAME:$IMAGE_TAG .
-      
-    - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v0.2.0
-      with:
-        service_account_key: ${{ secrets.GCP_SA_KEY }}
-        project_id: ${{ env.GCP_PROJECT_ID }}
-        export_default_credentials: true
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Check and create Artifact Registry repository
-      run: | 
-        gcloud artifacts repositories describe $ARTIFACTORY_REPO_NAME --location=us-central1 || gcloud artifacts repositories create $ARTIFACTORY_REPO_NAME --location=us-central1 --repository-format=docker 
+      # Build your Docker image (if needed)
+      - name: Build the Docker image
+        run: docker build -t $IMAGE_NAME:$IMAGE_TAG .
 
-    - name: Authenticate Docker to Google Artifact Registry
-      run: |
-        echo ${{ secrets.GCP_SA_KEY }} > /tmp/keyfile.json 
-        gcloud auth activate-service-account --key-file=/tmp/keyfile.json 
-        gcloud auth configure-docker us-central1-docker.pkg.dev
-        rm /tmp/keyfile.json # Cleanup the key file
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0.2.0
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          export_default_credentials: true
 
-    - name: Tag and Push to Google Artifact Registry
-      run: |
-        docker tag $IMAGE_NAME:$IMAGE_TAG us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME:$IMAGE_TAG 
-        docker push us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME:$IMAGE_TAG
+      - name: Check and create Artifact Registry repository
+        run: | 
+          gcloud artifacts repositories describe $ARTIFACTORY_REPO_NAME --location=us-central1 || gcloud artifacts repositories create $ARTIFACTORY_REPO_NAME --location=us-central1 --repository-format=docker 
 
-    - name: Deploy to Cloud Run
-      run: |
-        gcloud run deploy $SERVICE_NAME \
-          --image gcr.io/$GCP_PROJECT_ID/$IMAGE_NAME:$IMAGE_TAG \
-          --platform managed \
-          --region $GCP_REGION \
-          --allow-unauthenticated \
-          --project $GCP_PROJECT_ID
+      - name: Authenticate Docker to Google Artifact Registry
+        run: |
+          # Create a named pipe (FIFO)
+          mkfifo /tmp/keyfile.fifo  
+
+          # Write JSON key from secret to the FIFO in the background
+          echo ${{ secrets.GCP_SA_KEY }} > /tmp/keyfile.fifo &  
+
+          # Read the key from FIFO using gcloud
+          gcloud auth activate-service-account --key-file=/tmp/keyfile.fifo   
+
+          # Configure Docker for Artifact Registry
+          gcloud auth configure-docker us-central1-docker.pkg.dev
+
+          # Remove the FIFO file
+          rm /tmp/keyfile.fifo 
+
+      - name: Tag and Push to Google Artifact Registry
+        run: |
+            docker tag $IMAGE_NAME:$IMAGE_TAG us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME:$IMAGE_TAG 
+            docker push us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME:$IMAGE_TAG
+
+      - name: Deploy to Cloud Run
+        run: |
+            gcloud run deploy $SERVICE_NAME \
+            --image gcr.io/$GCP_PROJECT_ID/$IMAGE_NAME:$IMAGE_TAG \
+            --platform managed \
+            --region $GCP_REGION \
+            --allow-unauthenticated \
+            --project $GCP_PROJECT_ID
