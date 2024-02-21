@@ -53,4 +53,6 @@ jobs:
             --platform managed \
             --region $GCP_REGION \
             --allow-unauthenticated \
-            --project $GCP_PROJECT_ID
+            --project $GCP_PROJECT_ID \
+            --port 5678 \
+            --set-env-vars CONTAINER_PORT=5000
