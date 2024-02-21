@@ -64,7 +64,7 @@ jobs:
         
       - name: Tag and Push to Google Artifact Registry
         run: |
-            docker tag $IMAGE_NAME-embedded:$IMAGE_TAG us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME-embedded:$IMAGE_TAG
+            docker tag ghcr.io/allthingsclowd/$IMAGE_NAME-embedded:$IMAGE_TAG us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME-embedded:$IMAGE_TAG
             docker push us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME-embedded:$IMAGE_TAG
 
       - name: Deploy to Cloud Run
