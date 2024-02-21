@@ -9,6 +9,8 @@ env:
   IMAGE_NAME: py-rats-chest
   IMAGE_TAG: 0.0.7
   SERVICE_NAME: py-rats-chest-service
+  ARTIFACTORY_REPO_NAME: py-rats-chest-repo
+  
 
 jobs:
   setup-build-push-deploy:
@@ -32,10 +34,14 @@ jobs:
     - name: Configure Docker for GCR
       run: gcloud auth configure-docker
 
+    - name: Check and create Artifact Registry repository
+      run: | 
+        gcloud artifacts repositories describe $ARTIFACTORY_REPO_NAME --location=us-central1 || gcloud artifacts repositories create $ARTIFACTORY_REPO_NAME --location=us-central1 --repository-format=docker 
+
     - name: Tag and Push to Google Artifact Registry
       run: |
-        docker tag $IMAGE_NAME:$IMAGE_TAG us-central1-docker.pkg.dev/$GCP_PROJECT_ID/[ARTIFACTORY_REPO_NAME]/$IMAGE_NAME:$IMAGE_TAG 
-        docker push us-central1-docker.pkg.dev/$GCP_PROJECT_ID/[ARTIFACTORY_REPO_NAME]/$IMAGE_NAME:$IMAGE_TAG 
+        docker tag $IMAGE_NAME:$IMAGE_TAG us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME:$IMAGE_TAG 
+        docker push us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME:$IMAGE_TAG 
    
     - name: Deploy to Cloud Run
       run: |
