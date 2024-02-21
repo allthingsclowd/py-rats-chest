@@ -14,6 +14,9 @@ env:
 jobs:
   setup-build-push-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
