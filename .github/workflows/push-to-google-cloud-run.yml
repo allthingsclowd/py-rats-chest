@@ -55,8 +55,7 @@ jobs:
             --allow-unauthenticated \
             --project $GCP_PROJECT_ID \
             --port 5000 \
-            --set-env-vars CONTAINER_PORT=5000 \
-            --ingress=allow-all
+            --set-env-vars CONTAINER_PORT=5000
 
       - name: Test container endpoints in cloud
         run: |
