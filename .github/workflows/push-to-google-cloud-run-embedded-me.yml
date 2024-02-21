@@ -22,6 +22,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      # Add this step to login to the AquaSec Registry
+      - name: Log in to AquaSec Registry
+        run: echo "${{ secrets.AQUASEC_PASSWORD }}" | docker login registry.aquasec.com -u ${{ secrets.AQUASEC_USERNAME }} --password-stdin
+
       # Build your Docker image (if needed)
       - name: Build the Docker image
         run: docker build -f dockerfile-embedded-me -t $IMAGE_NAME:$IMAGE_TAG .
