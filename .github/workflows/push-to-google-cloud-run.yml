@@ -32,10 +32,11 @@ jobs:
     - name: Configure Docker for GCR
       run: gcloud auth configure-docker
 
-    - name: Tag and Push to Google Container Registry
+    - name: Tag and Push to Google Artifact Registry
       run: |
-        docker tag $IMAGE_NAME:$IMAGE_TAG gcr.io/$GCP_PROJECT_ID/$IMAGE_NAME:$IMAGE_TAG
-        docker push gcr.io/$GCP_PROJECT_ID/$IMAGE_NAME:$IMAGE_TAG
+        docker tag $IMAGE_NAME:$IMAGE_TAG us-central1-docker.pkg.dev/$GCP_PROJECT_ID/[ARTIFACTORY_REPO_NAME]/$IMAGE_NAME:$IMAGE_TAG 
+        docker push us-central1-docker.pkg.dev/$GCP_PROJECT_ID/[ARTIFACTORY_REPO_NAME]/$IMAGE_NAME:$IMAGE_TAG 
+   
 
     - name: Deploy to Cloud Run
       run: |
