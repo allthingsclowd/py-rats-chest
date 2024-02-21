@@ -1,0 +1,75 @@
+name: GCP Cloud Run Embedded MicorEnforcer
+
+on:
+  workflow_dispatch:
+
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_SERVICE_ACCOUNT: py-rats-chest-demo@niamhaiy.iam.gserviceaccount.com
+  GCP_REGION: us-central1 
+  IMAGE_NAME: py-rats-chest-embedded
+  IMAGE_TAG: latest
+  SERVICE_NAME: py-rats-chest-service
+  ARTIFACTORY_REPO_NAME: py-rats-chest-repo
+
+jobs:
+  setup-build-push-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Build your Docker image (if needed)
+      - name: Build the Docker image
+        run: docker build -f dockerfile-embedded-me -t $IMAGE_NAME:$IMAGE_TAG .
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0.2.0
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          export_default_credentials: true
+
+      - name: Check and create Artifact Registry repository
+        run: | 
+          gcloud artifacts repositories describe $ARTIFACTORY_REPO_NAME --location=us-central1 || gcloud artifacts repositories create $ARTIFACTORY_REPO_NAME --location=us-central1 --repository-format=docker 
+
+      - name: Authenticate Docker to Google Artifact Registry
+        run: |  
+            gcloud auth configure-docker us-central1-docker.pkg.dev  
+        
+      - name: Tag and Push to Google Artifact Registry
+        run: |
+            docker tag $IMAGE_NAME:$IMAGE_TAG us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME:$IMAGE_TAG 
+            docker push us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME:$IMAGE_TAG
+
+      - name: Deploy to Cloud Run
+        run: |
+            gcloud run deploy $SERVICE_NAME \
+            --image us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME:$IMAGE_TAG \
+            --platform managed \
+            --region $GCP_REGION \
+            --allow-unauthenticated \
+            --project $GCP_PROJECT_ID \
+            --port 5000 \
+            --set-env-vars CONTAINER_PORT=5000 \
+            --set-env-vars AQUA_LOGICAL_NAME=DemoEmbeddedME \
+            --set-env-vars AQUA_TOKEN=${{ secrets.AQUA_TOKEN }} \
+            --set-env-vars AQUA_SERVER=${{ secrets.AQUA_SERVER }} 
+
+      - name: Test container endpoints in cloud
+        run: |
+            sleep 5 # Give it some time to start up
+            url=$(gcloud run services describe $SERVICE_NAME --region=us-central1 --format="value(status.address.url)")
+            echo "Testing $url"
+            curl -X POST --fail $url/generate_traffic || { echo 'generate_traffic test failed'; exit 1; }
+            curl -X POST --fail $url/deploy_malware || { echo 'deploy_malware test failed'; exit 1; }
+            curl -X POST --fail $url/deploy_nmap || { echo 'deploy_nmap test failed'; exit 1; }
+            curl -X POST --fail $url/read_passwords || { echo 'read_passwords test failed'; exit 1; }     
+
+      - name: Remove Service from Cloud Run
+        run: |
+            gcloud run services delete $SERVICE_NAME --region=$GCP_REGION --quiet
