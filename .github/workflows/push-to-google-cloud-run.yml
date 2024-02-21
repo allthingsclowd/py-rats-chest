@@ -69,4 +69,4 @@ jobs:
 
       - name: Remove Service from Cloud Run
         run: |
-            gcloud run services delete $SERVICE_NAME --region=$GCP_REGION
+            gcloud run services delete $SERVICE_NAME --region=$GCP_REGION --quiet
