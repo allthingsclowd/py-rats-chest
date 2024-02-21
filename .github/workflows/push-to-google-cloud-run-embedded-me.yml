@@ -7,7 +7,7 @@ env:
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GCP_SERVICE_ACCOUNT: py-rats-chest-demo@niamhaiy.iam.gserviceaccount.com
   GCP_REGION: us-central1 
-  IMAGE_NAME: py-rats-chest-embedded
+  IMAGE_NAME: py-rats-chest
   IMAGE_TAG: latest
   SERVICE_NAME: py-rats-chest-service
   ARTIFACTORY_REPO_NAME: py-rats-chest-repo
@@ -33,10 +33,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      # Build your Docker image (if needed)
-      - name: Build the Docker image
-        run: docker build -f dockerfile-embedded-me -t $IMAGE_NAME:$IMAGE_TAG .
+      - name: Pull the Container Image
+        run: docker pull $IMAGE_NAME:$IMAGE_TAG
 
+      - name: Inject MicroEnforcer with aquactl 
+        run: |
+          wget --user $AQUASEC_USERNAME --password $AQUASEC_PASSWORD https://get.aquasec.com/aquactl/v3/aquactl 
+          chmod +x aquactl
+          wget --user $AQUASEC_USERNAME --password $AQUASEC_PASSWORD https://download.aquasec.com/micro-enforcer/2022.4.460/x86/microenforcer
+          chmod +x microenforcer 
+          sudo ./aquactl inject --src-image $IMAGE_NAME:$IMAGE_TAG --dst-image $IMAGE_NAME-embedded:$IMAGE_TAG --microenforcer-binary ./microenforcer --aqua-server $AQUA_SERVER --aqua-token $AQUA_TOKEN
+
+      # - name: Aqua Image Scanner - Scan Embedded Image and Register to Aqua Console # Note the --registry and --register-compliant command 
+      #   run: |
+      #       docker image ls
+      #       docker login registry.aquasec.com -u $AQUA_USER -p $AQUA_PASSWORD
+      #       docker pull registry.aquasec.com/scanner:2022.4
+      #       docker run --rm -v $GITHUB_WORKSPACE:/tmp -v /var/run/docker.sock:/var/run/docker.sock -e BUILD_NUMBER=$BUILD_NUMBER -e BUILD_JOB_NAME=$BUILD_NAME registry.aquasec.com/scanner:2022.4 scan -w /tmp --host $AQUA_SERVER_URL --user $AQUA_SCANNER_USER --password $AQUA_SCANNER_PASSWORD --show-negligible --local $DST_IMAGE --htmlfile /tmp/out.html --jsonfile /tmp/out.json --register-compliant --registry "My_Registry" > /dev/null
+            
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v0.2.0
         with:
@@ -54,13 +68,13 @@ jobs:
         
       - name: Tag and Push to Google Artifact Registry
         run: |
-            docker tag $IMAGE_NAME:$IMAGE_TAG us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME:$IMAGE_TAG 
-            docker push us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME:$IMAGE_TAG
+            docker tag $IMAGE_NAME-embedded:$IMAGE_TAG us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME-embedded:$IMAGE_TAG
+            docker push us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME-embedded:$IMAGE_TAG
 
       - name: Deploy to Cloud Run
         run: |
             gcloud run deploy $SERVICE_NAME \
-            --image us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME:$IMAGE_TAG \
+            --image us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME-embedded:$IMAGE_TAG \
             --platform managed \
             --region $GCP_REGION \
             --allow-unauthenticated \
