@@ -1,4 +1,4 @@
-name: Build, Push and Deploy to Google Cloud Run
+name: Google Cloud Run Deployment
 
 on:
   workflow_dispatch:
@@ -9,6 +9,8 @@ env:
   IMAGE_NAME: py-rats-chest
   IMAGE_TAG: 0.0.7
   SERVICE_NAME: py-rats-chest-service
+  ARTIFACTORY_REPO_NAME: py-rats-chest-repo
+  
 
 jobs:
   setup-build-push-deploy:
@@ -29,13 +31,21 @@ jobs:
         project_id: ${{ env.GCP_PROJECT_ID }}
         export_default_credentials: true
 
-    - name: Configure Docker for GCR
-      run: gcloud auth configure-docker
+    - name: Check and create Artifact Registry repository
+      run: | 
+        gcloud artifacts repositories describe $ARTIFACTORY_REPO_NAME --location=us-central1 || gcloud artifacts repositories create $ARTIFACTORY_REPO_NAME --location=us-central1 --repository-format=docker 
 
-    - name: Tag and Push to Google Container Registry
+    - name: Authenticate Docker to Google Artifact Registry
       run: |
-        docker tag $IMAGE_NAME:$IMAGE_TAG gcr.io/$GCP_PROJECT_ID/$IMAGE_NAME:$IMAGE_TAG
-        docker push gcr.io/$GCP_PROJECT_ID/$IMAGE_NAME:$IMAGE_TAG
+        echo ${{ secrets.GCP_SA_KEY }} > /tmp/keyfile.json 
+        gcloud auth activate-service-account --key-file=/tmp/keyfile.json 
+        gcloud auth configure-docker us-central1-docker.pkg.dev
+        rm /tmp/keyfile.json # Cleanup the key file
+
+    - name: Tag and Push to Google Artifact Registry
+      run: |
+        docker tag $IMAGE_NAME:$IMAGE_TAG us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME:$IMAGE_TAG 
+        docker push us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME:$IMAGE_TAG
 
     - name: Deploy to Cloud Run
       run: |
