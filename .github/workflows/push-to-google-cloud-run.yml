@@ -31,18 +31,20 @@ jobs:
         project_id: ${{ env.GCP_PROJECT_ID }}
         export_default_credentials: true
 
-    - name: Configure Docker for GCR
-      run: gcloud auth configure-docker
-
     - name: Check and create Artifact Registry repository
       run: | 
         gcloud artifacts repositories describe $ARTIFACTORY_REPO_NAME --location=us-central1 || gcloud artifacts repositories create $ARTIFACTORY_REPO_NAME --location=us-central1 --repository-format=docker 
 
+    - name: Authenticate Docker to Google Artifact Registry
+      run: |
+        echo ${{ secrets.GCP_SA_KEY }} | gcloud auth activate-service-account --key-file=-
+        gcloud auth configure-docker us-central1-docker.pkg.dev
+
     - name: Tag and Push to Google Artifact Registry
       run: |
         docker tag $IMAGE_NAME:$IMAGE_TAG us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME:$IMAGE_TAG 
-        docker push us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME:$IMAGE_TAG 
-   
+        docker push us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME:$IMAGE_TAG
+
     - name: Deploy to Cloud Run
       run: |
         gcloud run deploy $SERVICE_NAME \
