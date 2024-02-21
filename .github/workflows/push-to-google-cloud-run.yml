@@ -38,8 +38,8 @@ jobs:
 
       - name: Authenticate Docker to Google Artifact Registry
         run: |
-          gcloud auth activate-service-account --key-file=<(echo ${{ secrets.GCP_SA_KEY }})   
-          gcloud auth configure-docker us-central1-docker.pkg.dev 
+            gcloud auth activate-service-account --key-file=- <<< ${{ secrets.GCP_SA_KEY }}  
+            gcloud auth configure-docker us-central1-docker.pkg.dev 
         
       - name: Tag and Push to Google Artifact Registry
         run: |
