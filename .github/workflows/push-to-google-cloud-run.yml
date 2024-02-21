@@ -38,8 +38,7 @@ jobs:
           gcloud artifacts repositories describe $ARTIFACTORY_REPO_NAME --location=us-central1 || gcloud artifacts repositories create $ARTIFACTORY_REPO_NAME --location=us-central1 --repository-format=docker 
 
       - name: Authenticate Docker to Google Artifact Registry
-        run: |
-            gcloud auth activate-service-account --key-file=- ${GCP_SERVICE_ACCOUNT} <<< ${{ secrets.GCP_SA_KEY }}  
+        run: |  
             gcloud auth configure-docker us-central1-docker.pkg.dev  
         
       - name: Tag and Push to Google Artifact Registry
