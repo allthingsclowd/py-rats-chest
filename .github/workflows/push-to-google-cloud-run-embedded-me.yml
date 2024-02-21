@@ -34,11 +34,11 @@ jobs:
 
       - name: Inject MicroEnforcer with aquactl 
         run: |
-          wget --user $AQUASEC_USERNAME --password $AQUASEC_PASSWORD https://get.aquasec.com/aquactl/v3/aquactl 
+          wget --user ${{ secrets.AQUASEC_USERNAME }} --password ${{ secrets.AQUASEC_PASSWORD }} https://get.aquasec.com/aquactl/v3/aquactl 
           chmod +x aquactl
-          wget --user $AQUASEC_USERNAME --password $AQUASEC_PASSWORD https://download.aquasec.com/micro-enforcer/2022.4.460/x86/microenforcer
+          wget --user ${{ secrets.AQUASEC_USERNAME }} --password ${{ secrets.AQUASEC_PASSWORD }} https://download.aquasec.com/micro-enforcer/2022.4.460/x86/microenforcer
           chmod +x microenforcer 
-          sudo ./aquactl inject --src-image $IMAGE_NAME:$IMAGE_TAG --dst-image $IMAGE_NAME-embedded:$IMAGE_TAG --microenforcer-binary ./microenforcer --aqua-server $AQUA_SERVER --aqua-token $AQUA_TOKEN
+          sudo ./aquactl inject --src-image $IMAGE_NAME:$IMAGE_TAG --dst-image $IMAGE_NAME-embedded:$IMAGE_TAG --microenforcer-binary ./microenforcer --aqua-server ${{ secrets.AQUA_SERVER }} --aqua-token ${{ secrets.AQUA_TOKEN }}
 
       # - name: Aqua Image Scanner - Scan Embedded Image and Register to Aqua Console # Note the --registry and --register-compliant command 
       #   run: |
