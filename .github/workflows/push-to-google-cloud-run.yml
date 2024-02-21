@@ -57,3 +57,15 @@ jobs:
             --port 5000 \
             --set-env-vars CONTAINER_PORT=5000 \
             --ingress=allow-all
+
+      - name: Test container endpoints in cloud
+        run: |
+            url=$(gcloud run services describe $SERVICE_NAME --region=us-central1 --format="value(status.address.url)")
+            curl -X POST --fail http://$url/generate_traffic || { echo 'generate_traffic test failed'; exit 1; }
+            curl -X POST --fail http://$url/deploy_malware || { echo 'deploy_malware test failed'; exit 1; }
+            curl -X POST --fail http://$url/deploy_nmap || { echo 'deploy_nmap test failed'; exit 1; }
+            curl -X POST --fail http://$url/read_passwords || { echo 'read_passwords test failed'; exit 1; }     
+
+      - name: Remove Service from Cloud Run
+        run: |
+            gcloud run services delete $SERVICE_NAME --region=$GCP_REGION
