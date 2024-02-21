@@ -62,10 +62,10 @@ jobs:
             sleep 5 # Give it some time to start up
             url=$(gcloud run services describe $SERVICE_NAME --region=us-central1 --format="value(status.address.url)")
             echo "Testing $url"
-            curl -X POST --fail http://$url/generate_traffic || { echo 'generate_traffic test failed'; exit 1; }
-            curl -X POST --fail http://$url/deploy_malware || { echo 'deploy_malware test failed'; exit 1; }
-            curl -X POST --fail http://$url/deploy_nmap || { echo 'deploy_nmap test failed'; exit 1; }
-            curl -X POST --fail http://$url/read_passwords || { echo 'read_passwords test failed'; exit 1; }     
+            curl -X POST --fail $url/generate_traffic || { echo 'generate_traffic test failed'; exit 1; }
+            curl -X POST --fail $url/deploy_malware || { echo 'deploy_malware test failed'; exit 1; }
+            curl -X POST --fail $url/deploy_nmap || { echo 'deploy_nmap test failed'; exit 1; }
+            curl -X POST --fail $url/read_passwords || { echo 'read_passwords test failed'; exit 1; }     
 
       - name: Remove Service from Cloud Run
         run: |
