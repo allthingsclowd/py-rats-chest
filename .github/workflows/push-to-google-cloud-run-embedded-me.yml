@@ -67,46 +67,45 @@ jobs:
                       --token ${{ secrets.AQUA_SCANNER_TOKEN }} \
                       --show-negligible \
                       --register-compliant \
-                      --registry "https://ghcr.io/", "us-central1-docker.pkg.dev" \
+                      --registry "us-central1-docker.pkg.dev" \
                       --local ghcr.io/allthingsclowd/$IMAGE_NAME-embedded:$IMAGE_TAG \
                       --htmlfile /tmp/out.html \
                       --jsonfile /tmp/out.json \
                       > /dev/null
                       
-
-      # - name: Authenticate Docker to Google Artifact Registry
-      #   run: |  
-      #       gcloud auth configure-docker us-central1-docker.pkg.dev  
+      - name: Authenticate Docker to Google Artifact Registry
+        run: |  
+            gcloud auth configure-docker us-central1-docker.pkg.dev  
         
-      # - name: Tag and Push to Google Artifact Registry
-      #   run: |
-      #       docker tag ghcr.io/allthingsclowd/$IMAGE_NAME-embedded:$IMAGE_TAG us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME-embedded:$IMAGE_TAG
-      #       docker push us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME-embedded:$IMAGE_TAG
+      - name: Tag and Push to Google Artifact Registry
+        run: |
+            docker tag ghcr.io/allthingsclowd/$IMAGE_NAME-embedded:$IMAGE_TAG us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME-embedded:$IMAGE_TAG
+            docker push us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME-embedded:$IMAGE_TAG
 
-      # - name: Deploy to Cloud Run
-      #   run: |
-      #       gcloud run deploy $SERVICE_NAME \
-      #       --image us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME-embedded:$IMAGE_TAG \
-      #       --platform managed \
-      #       --region $GCP_REGION \
-      #       --allow-unauthenticated \
-      #       --project $GCP_PROJECT_ID \
-      #       --port 5000 \
-      #       --set-env-vars CONTAINER_PORT=5000 \
-      #       --set-env-vars AQUA_LOGICAL_NAME=DemoEmbeddedME \
-      #       --set-env-vars AQUA_TOKEN=${{ secrets.AQUA_TOKEN }} \
-      #       --set-env-vars AQUA_SERVER=${{ secrets.AQUA_SERVER }} 
+      - name: Deploy to Cloud Run
+        run: |
+            gcloud run deploy $SERVICE_NAME \
+            --image us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME-embedded:$IMAGE_TAG \
+            --platform managed \
+            --region $GCP_REGION \
+            --allow-unauthenticated \
+            --project $GCP_PROJECT_ID \
+            --port 5000 \
+            --set-env-vars CONTAINER_PORT=5000 \
+            --set-env-vars AQUA_LOGICAL_NAME=DemoEmbeddedME \
+            --set-env-vars AQUA_TOKEN=${{ secrets.AQUA_TOKEN }} \
+            --set-env-vars AQUA_SERVER=${{ secrets.AQUA_SERVER }} 
 
-      # - name: Test container endpoints in cloud
-      #   run: |
-      #       sleep 5 # Give it some time to start up
-      #       url=$(gcloud run services describe $SERVICE_NAME --region=us-central1 --format="value(status.address.url)")
-      #       echo "Testing $url"
-      #       curl -X POST --fail $url/generate_traffic || { echo 'generate_traffic test failed'; exit 1; }
-      #       curl -X POST --fail $url/deploy_malware || { echo 'deploy_malware test failed'; exit 1; }
-      #       curl -X POST --fail $url/deploy_nmap || { echo 'deploy_nmap test failed'; exit 1; }
-      #       curl -X POST --fail $url/read_passwords || { echo 'read_passwords test failed'; exit 1; }     
+      - name: Test container endpoints in cloud
+        run: |
+            sleep 5 # Give it some time to start up
+            url=$(gcloud run services describe $SERVICE_NAME --region=us-central1 --format="value(status.address.url)")
+            echo "Testing $url"
+            curl -X POST --fail $url/generate_traffic || { echo 'generate_traffic test failed'; exit 1; }
+            curl -X POST --fail $url/deploy_malware || { echo 'deploy_malware test failed'; exit 1; }
+            curl -X POST --fail $url/deploy_nmap || { echo 'deploy_nmap test failed'; exit 1; }
+            curl -X POST --fail $url/read_passwords || { echo 'read_passwords test failed'; exit 1; }     
 
-      # - name: Remove Service from Cloud Run
-      #   run: |
-      #       gcloud run services delete $SERVICE_NAME --region=$GCP_REGION --quiet
+      - name: Remove Service from Cloud Run
+        run: |
+            gcloud run services delete $SERVICE_NAME --region=$GCP_REGION --quiet
