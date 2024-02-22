@@ -9,7 +9,7 @@ env:
   GCP_REGION: us-central1 
   IMAGE_NAME: py-rats-chest
   IMAGE_TAG: latest
-  SERVICE_NAME: py-rats-chest-service
+  SERVICE_NAME: Embedded-ME-Service-
   ARTIFACTORY_REPO_NAME: py-rats-chest-repo
 
 jobs:
