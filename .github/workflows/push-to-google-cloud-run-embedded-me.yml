@@ -34,18 +34,11 @@ jobs:
 
       - name: Inject MicroEnforcer with aquactl 
         run: |
-          wget --user ${{ secrets.AQUASEC_USERNAME }} --password ${{ secrets.AQUASEC_PASSWORD }} https://get.aquasec.com/aquactl/v3/aquactl 
+          wget --user  --password ${{ secrets.AQUASEC_PASSWORD }} https://get.aquasec.com/aquactl/v3/aquactl 
           chmod +x aquactl
           wget --user ${{ secrets.AQUASEC_USERNAME }} --password ${{ secrets.AQUASEC_PASSWORD }} https://download.aquasec.com/micro-enforcer/2022.4.460/x86/microenforcer
           chmod +x microenforcer 
           sudo ./aquactl inject --src-image ghcr.io/allthingsclowd/$IMAGE_NAME:$IMAGE_TAG --dst-image ghcr.io/allthingsclowd/$IMAGE_NAME-embedded:$IMAGE_TAG --microenforcer-binary ./microenforcer --aqua-server ${{ secrets.AQUA_SERVER }} --aqua-token ${{ secrets.AQUA_TOKEN }}
-
-      # - name: Aqua Image Scanner - Scan Embedded Image and Register to Aqua Console # Note the --registry and --register-compliant command 
-      #   run: |
-      #       docker image ls
-      #       docker login registry.aquasec.com -u $AQUA_USER -p $AQUA_PASSWORD
-      #       docker pull registry.aquasec.com/scanner:2022.4
-      #       docker run --rm -v $GITHUB_WORKSPACE:/tmp -v /var/run/docker.sock:/var/run/docker.sock -e BUILD_NUMBER=$BUILD_NUMBER -e BUILD_JOB_NAME=$BUILD_NAME registry.aquasec.com/scanner:2022.4 scan -w /tmp --host $AQUA_SERVER_URL --user $AQUA_SCANNER_USER --password $AQUA_SCANNER_PASSWORD --show-negligible --local $DST_IMAGE --htmlfile /tmp/out.html --jsonfile /tmp/out.json --register-compliant --registry "My_Registry" > /dev/null
             
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v0.2.0
@@ -58,28 +51,48 @@ jobs:
         run: | 
           gcloud artifacts repositories describe $ARTIFACTORY_REPO_NAME --location=us-central1 || gcloud artifacts repositories create $ARTIFACTORY_REPO_NAME --location=us-central1 --repository-format=docker 
 
-      - name: Authenticate Docker to Google Artifact Registry
-        run: |  
-            gcloud auth configure-docker us-central1-docker.pkg.dev  
-        
-      - name: Tag and Push to Google Artifact Registry
+      - name: Aqua Image Scanner - Scan Embedded Image and Register to Aqua Console # Note the --registry and --register-compliant command 
         run: |
-            docker tag ghcr.io/allthingsclowd/$IMAGE_NAME-embedded:$IMAGE_TAG us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME-embedded:$IMAGE_TAG
-            docker push us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME-embedded:$IMAGE_TAG
+              docker image ls
+              docker login registry.aquasec.com -u ${{ secrets.AQUASEC_USERNAME }} -p ${{ secrets.AQUASEC_PASSWORD }}
+              docker pull registry.aquasec.com/scanner:2022.4
+              docker run --rm -v $GITHUB_WORKSPACE:/tmp \
+                    -v /var/run/docker.sock:/var/run/docker.sock \
+                    -e BUILD_NUMBER=$IMAGE_TAG \
+                    -e BUILD_JOB_NAME=$IMAGE_NAME-embedded \
+                    registry.aquasec.com/scanner:2401.3.21 scan -w /tmp \
+                      --host ${{ secrets.AQUA_SCANNER_HOST }} \
+                      --token ${{ secrets.AQUA_SCANNER_TOKEN }} \
+                      --show-negligible \
+                      --local ghcr.io/allthingsclowd/$IMAGE_NAME-embedded:$IMAGE_TAG \
+                      --htmlfile /tmp/out.html 
+                      --jsonfile /tmp/out.json \
+                      --register-compliant \
+                      --registry us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME \
+                      > /dev/null
 
-      - name: Deploy to Cloud Run
-        run: |
-            gcloud run deploy $SERVICE_NAME \
-            --image us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME-embedded:$IMAGE_TAG \
-            --platform managed \
-            --region $GCP_REGION \
-            --allow-unauthenticated \
-            --project $GCP_PROJECT_ID \
-            --port 5000 \
-            --set-env-vars CONTAINER_PORT=5000 \
-            --set-env-vars AQUA_LOGICAL_NAME=DemoEmbeddedME \
-            --set-env-vars AQUA_TOKEN=${{ secrets.AQUA_TOKEN }} \
-            --set-env-vars AQUA_SERVER=${{ secrets.AQUA_SERVER }} 
+      # - name: Authenticate Docker to Google Artifact Registry
+      #   run: |  
+      #       gcloud auth configure-docker us-central1-docker.pkg.dev  
+        
+      # - name: Tag and Push to Google Artifact Registry
+      #   run: |
+      #       docker tag ghcr.io/allthingsclowd/$IMAGE_NAME-embedded:$IMAGE_TAG us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME-embedded:$IMAGE_TAG
+      #       docker push us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME-embedded:$IMAGE_TAG
+
+      # - name: Deploy to Cloud Run
+      #   run: |
+      #       gcloud run deploy $SERVICE_NAME \
+      #       --image us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME-embedded:$IMAGE_TAG \
+      #       --platform managed \
+      #       --region $GCP_REGION \
+      #       --allow-unauthenticated \
+      #       --project $GCP_PROJECT_ID \
+      #       --port 5000 \
+      #       --set-env-vars CONTAINER_PORT=5000 \
+      #       --set-env-vars AQUA_LOGICAL_NAME=DemoEmbeddedME \
+      #       --set-env-vars AQUA_TOKEN=${{ secrets.AQUA_TOKEN }} \
+      #       --set-env-vars AQUA_SERVER=${{ secrets.AQUA_SERVER }} 
 
       # - name: Test container endpoints in cloud
       #   run: |
