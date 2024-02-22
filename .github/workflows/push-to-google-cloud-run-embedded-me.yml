@@ -68,7 +68,7 @@ jobs:
                       --show-negligible \
                       --register-compliant \
                       --registry "https://ghcr.io/" \
-                      --registry "https://us-central1-docker.pkg.dev/" \
+                      --registry "us-central1-docker.pkg.dev" \
                       --local ghcr.io/allthingsclowd/$IMAGE_NAME-embedded:$IMAGE_TAG \
                       --htmlfile /tmp/out.html \
                       --jsonfile /tmp/out.json \
