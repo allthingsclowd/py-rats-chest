@@ -10,7 +10,7 @@
 # - Testing the deployed container's endpoints.
 # - Removing the Cloud Run service upon completion.
 
-name: Base App with Embedded MicroEnforcer Google Cloud Run Deployment
+name: GCP Cloud Run App & Embedded ME
 
 on:
   workflow_dispatch:

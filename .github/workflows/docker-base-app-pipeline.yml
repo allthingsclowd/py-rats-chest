@@ -1,4 +1,4 @@
-name: Base Application Pipeline
+name: Docker Base App Build and Test
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       branchName:
         description: 'Branch Name (manual trigger)' 
         required: true
-        default: 'grazzer'
+        default: 'whatsnext'
 
 jobs:
   build-test-push:

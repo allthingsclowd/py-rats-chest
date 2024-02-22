@@ -1,7 +1,12 @@
-name: Base App Google Cloud Run Deployment
+name: GCP Cloud Run Base App
 
 on:
-  workflow_dispatch:
+    workflow_dispatch:
+      inputs:
+        branchName:
+          description: 'Branch Name (manual trigger)' 
+          required: true
+          default: 'grazzer'
 
 env:
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}

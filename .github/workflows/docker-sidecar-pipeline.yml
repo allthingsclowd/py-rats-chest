@@ -1,0 +1,95 @@
+name: Docker Sidecar Build and Test
+
+on:
+  push:
+    branches:
+      - grazzer
+  workflow_dispatch:
+    inputs:
+      branchName:
+        description: 'Branch Name (manual trigger)' 
+        required: true
+        default: 'whatsnext'
+
+env:
+  MICROENFORCER_VERSION: "2022.4.460"
+
+jobs:
+  build-test-push:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: write
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Set variable based on branch
+      run: |
+        BRANCH_NAME=${GITHUB_REF##*/}
+        REPO_NAME=${GITHUB_REPOSITORY#*/}
+        REPO_NAME=${REPO_NAME%.git}
+        if [[ "$BRANCH_NAME" == "grazzer" ]]; then
+          VAR_VALUE="${REPO_NAME}"
+        else
+          VAR_VALUE="${REPO_NAME}-dev"
+        fi
+        echo "BRANCH_SPECIFIC_VAR=${VAR_VALUE}" >> $GITHUB_ENV
+
+    - name: Calculate next version
+      id: next-version
+      run: |
+        # Ensure tags are fetched
+        git fetch --tags
+        
+        # Get the latest tag by sorting them as versions
+        LATEST_TAG=$(git tag -l --sort=-v:refname | head -n 1)
+        
+        if [[ -z "$LATEST_TAG" ]]; then
+          NEXT_VERSION="0.0.1"
+        else
+          # Break the version into an array
+          IFS='.' read -r -a version_parts <<< "$LATEST_TAG"
+          
+          # Increment the patch version
+          patch=$((version_parts[2] + 1))
+          
+          # Construct the next version
+          NEXT_VERSION="${version_parts[0]}.${version_parts[1]}.$patch"
+        fi
+        
+        echo "Next version: $NEXT_VERSION"
+        echo "::set-output name=version::$NEXT_VERSION"
+
+    # Inject MicroEnforcer into the container image using Aqua's tool
+    - name: Inject MicroEnforcer with aquactl
+      run: |
+        wget --user ${{ secrets.AQUASEC_USERNAME }} --password ${{ secrets.AQUASEC_PASSWORD }} https://get.aquasec.com/aquactl/v3/aquactl
+        chmod +x aquactl
+        wget --user ${{ secrets.AQUASEC_USERNAME }} --password ${{ secrets.AQUASEC_PASSWORD }} https://download.aquasec.com/micro-enforcer/${{ env.MICROENFORCER_VERSION}}/x86/microenforcer
+        chmod +x microenforcer
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GHCR_TOKEN }}
+  
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./dockerfile-sidecar
+        push: true
+        tags: |
+          ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}sidecar
+          ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}sidecar:latest
+          ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}sidecar:${{ steps.next-version.outputs.version }}
+        build-args: |
+          BASE_IMAGE=ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}:${{ steps.next-version.outputs.version }}
+          AQUA_IMAGE=registry.aquasec.com/microenforcer:${{ env.MICROENFORCER_VERSION}}
+        platforms: linux/amd64    
