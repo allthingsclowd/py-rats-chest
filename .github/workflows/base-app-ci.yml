@@ -1,4 +1,4 @@
-name: Build, Push Docker image, Test and Tag
+name: Base Application Pipeline
 
 on:
   push:
