@@ -97,7 +97,7 @@ jobs:
             --project $GCP_PROJECT_ID \
             --port 5000 \
             --set-env-vars CONTAINER_PORT=5000 \
-            --set-env-vars AQUA_LOGICAL_NAME=DemoEmbeddedME \
+            --set-env-vars AQUA_LOGICAL_NAME=${{ env.GCP_SERVICE_NAME }} \
             --set-env-vars AQUA_TOKEN=${{ secrets.AQUA_TOKEN }} \
             --set-env-vars AQUA_SERVER=${{ secrets.AQUA_SERVER }} 
 
