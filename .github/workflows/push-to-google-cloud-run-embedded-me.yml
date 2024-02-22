@@ -61,6 +61,7 @@ jobs:
                     -e BUILD_NUMBER=$IMAGE_TAG \
                     -e BUILD_JOB_NAME=$IMAGE_NAME-embedded \
                     registry.aquasec.com/scanner:2401.3.21 scan -w /tmp \
+                      --socket docker \
                       --host ${{ secrets.AQUA_SCANNER_HOST }} \
                       --token ${{ secrets.AQUA_SCANNER_TOKEN }} \
                       --show-negligible \
