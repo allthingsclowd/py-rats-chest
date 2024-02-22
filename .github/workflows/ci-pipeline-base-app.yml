@@ -3,7 +3,13 @@ name: Build, Push Docker image, Test and Tag
 on:
   push:
     branches:
-      - grazzer # Adjust this as necessary
+      - grazzer
+  workflow_dispatch:
+    inputs:
+      branchName:
+        description: 'Branch Name (manual trigger)' 
+        required: true
+        default: 'grazzer'
 
 jobs:
   build-test-push:
