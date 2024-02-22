@@ -1,0 +1,32 @@
+name: Docker Compose Workflow
+
+on:
+    workflow_dispatch:
+      inputs:
+        branchName:
+          description: 'Branch Name (manual trigger)' 
+          required: true
+          default: 'whatsnext'
+  
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Inspect Main Image for Entrypoint and Cmd
+        run: |
+          echo "ENTRYPOINT=$(docker inspect ghcr.io/allthingsclowd/py-rats-chest:latest -f '{{json .Config.Entrypoint}}')" >> $GITHUB_ENV
+          echo "CMD=$(docker inspect ghcr.io/allthingsclowd/py-rats-chest:latest -f '{{json .Config.Cmd}}')" >> $GITHUB_ENV
+          echo "IMAGE_ID=$(docker image inspect --format '{{.Id}}' ghcr.io/allthingsclowd/py-rats-chest:latest)" >> $GITHUB_ENV
+
+      - name: Build and Run with Docker Compose
+        run: docker-compose up -d
+        env:
+          AQUA_SERVER: ${{ secrets.AQUA_SERVER }}
+          AQUA_TOKEN: ${{ secrets.AQUA_TOKEN }}
+

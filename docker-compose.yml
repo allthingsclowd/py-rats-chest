@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  main-app:
+    image: ghcr.io/allthingsclowd/py-rats-chest:latest
+    environment:
+      AQUA_IMAGE_ID: ${IMAGE_ID}
+      AQUA_MICROENFORCER: "1"
+      AQUA_SERVER: ${AQUA_SERVER}
+      AQUA_TOKEN: ${AQUA_TOKEN}
+      LD_PRELOAD: "/.aquasec/bin/amd64/slklib.so"
+    volumes:
+      - ./aquasec:/aquasec
+    entrypoint: ["/.aquasec/bin/microenforcer"]
+    command: ${CMD}
+
+  sidecar-app:
+    image: ghcr.io/allthingsclowd/py-rats-chest-sidecar:latest
+    volumes:
+      - ./aquasec:/aquasec
