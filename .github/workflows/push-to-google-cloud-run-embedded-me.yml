@@ -51,6 +51,7 @@ jobs:
         run: | 
           gcloud artifacts repositories describe $ARTIFACTORY_REPO_NAME --location=us-central1 || gcloud artifacts repositories create $ARTIFACTORY_REPO_NAME --location=us-central1 --repository-format=docker 
 
+        # Note: Prerequisite --registry must exist in the Aqua Console for this to work
       - name: Aqua Image Scanner - Scan Embedded Image and Register to Aqua Console # Note the --registry and --register-compliant command 
         run: |
               docker image ls
