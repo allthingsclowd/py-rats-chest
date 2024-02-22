@@ -67,7 +67,7 @@ jobs:
                       --token ${{ secrets.AQUA_SCANNER_TOKEN }} \
                       --show-negligible \
                       --register-compliant \
-                      --registry "https://ghcr.io/ \
+                      --registry "https://ghcr.io/" \
                       --local ghcr.io/allthingsclowd/$IMAGE_NAME-embedded:$IMAGE_TAG \
                       --htmlfile /tmp/out.html \
                       --jsonfile /tmp/out.json \
