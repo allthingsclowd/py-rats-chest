@@ -67,9 +67,12 @@ jobs:
                       --local ghcr.io/allthingsclowd/$IMAGE_NAME-embedded:$IMAGE_TAG \
                       --htmlfile /tmp/out.html \
                       --jsonfile /tmp/out.json \
-                      --register-compliant \
-                      --registry ghcr.io/allthingsclowd/$IMAGE_NAME-embedded \
                       > /dev/null
+
+            # Removed from above statement - needs debugging
+            # --register-compliant \
+            # --registry ghcr.io/allthingsclowd/$IMAGE_NAME-embedded \
+
 
       # - name: Authenticate Docker to Google Artifact Registry
       #   run: |  
