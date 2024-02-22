@@ -68,7 +68,7 @@ jobs:
                       --htmlfile /tmp/out.html \
                       --jsonfile /tmp/out.json \
                       --register-compliant \
-                      --registry us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME \
+                      --registry ghcr.io/allthingsclowd/$IMAGE_NAME-embedded \
                       > /dev/null
 
       # - name: Authenticate Docker to Google Artifact Registry
