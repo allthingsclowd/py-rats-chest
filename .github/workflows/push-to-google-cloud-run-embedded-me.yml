@@ -85,7 +85,7 @@ jobs:
       - name: Deploy to Cloud Run
         run: |
             echo "GCP_SERVICE_NAME=${SERVICE_NAME}$(tr -dc 'a-z0-9' </dev/urandom | head -c 5 2>/dev/null)" >> $GITHUB_ENV
-            gcloud run deploy $GCP_SERVICE_NAME \
+            gcloud run deploy ${{ env.GCP_SERVICE_NAME }} \
             --image us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME-embedded:$IMAGE_TAG \
             --platform managed \
             --region $GCP_REGION \
@@ -100,7 +100,7 @@ jobs:
       - name: Test container endpoints in cloud
         run: |
             sleep 5 # Give it some time to start up
-            url=$(gcloud run services describe $GCP_SERVICE_NAME --region=us-central1 --format="value(status.address.url)")
+            url=$(gcloud run services describe ${{ env.GCP_SERVICE_NAME }} --region=us-central1 --format="value(status.address.url)")
             echo "Testing $url"
             curl -X POST --fail $url/generate_traffic || { echo 'generate_traffic test failed'; exit 1; }
             curl -X POST --fail $url/deploy_malware || { echo 'deploy_malware test failed'; exit 1; }
@@ -109,4 +109,4 @@ jobs:
 
       - name: Remove Service from Cloud Run
         run: |
-            gcloud run services delete $GCP_SERVICE_NAME --region=$GCP_REGION --quiet
+            gcloud run services delete ${{ env.GCP_SERVICE_NAME }} --region=$GCP_REGION --quiet
