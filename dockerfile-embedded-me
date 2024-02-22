@@ -1,5 +1,5 @@
 # Define arguments for base and Aqua MicroEnforcer images, allowing them to be overridden at build time
-ARG BASE_IMAGE=ghcr.io/allthingsclowd/py-rats-chest:0.0.3
+ARG BASE_IMAGE=ghcr.io/allthingsclowd/py-rats-chest:latest
 ARG AQUA_IMAGE=registry.aquasec.com/microenforcer:2022.4.461
 
 # Capture the architecture as a build argument
