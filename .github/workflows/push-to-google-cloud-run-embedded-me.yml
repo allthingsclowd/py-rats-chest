@@ -10,10 +10,15 @@
 # - Testing the deployed container's endpoints.
 # - Removing the Cloud Run service upon completion.
 
-name: GCP Cloud Run Embedded MicroEnforcer
+name: Base App with Embedded MicroEnforcer Google Cloud Run Deployment
 
 on:
   workflow_dispatch:
+    inputs:
+      branchName:
+        description: 'Branch Name (manual trigger)' 
+        required: true
+        default: 'grazzer'
 
 env:
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}

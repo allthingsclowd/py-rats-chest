@@ -1,4 +1,4 @@
-name: Google Cloud Run Deployment
+name: Base App Google Cloud Run Deployment
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ env:
   GCP_SERVICE_ACCOUNT: py-rats-chest-demo@niamhaiy.iam.gserviceaccount.com
   GCP_REGION: us-central1 
   IMAGE_NAME: py-rats-chest
-  IMAGE_TAG: 0.0.7
+  IMAGE_TAG: latest
   SERVICE_NAME: py-rats-chest-service
   ARTIFACTORY_REPO_NAME: py-rats-chest-repo
 
