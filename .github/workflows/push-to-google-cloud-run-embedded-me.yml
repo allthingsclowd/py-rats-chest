@@ -1,16 +1,7 @@
-name: GCP Cloud Run Embedded MicorEnforcer
+name: GCP Cloud Run Embedded MicroEnforcer
 
 on:
   workflow_dispatch:
-
-env:
-  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  GCP_SERVICE_ACCOUNT: py-rats-chest-demo@niamhaiy.iam.gserviceaccount.com
-  GCP_REGION: us-central1 
-  IMAGE_NAME: py-rats-chest
-  IMAGE_TAG: latest
-  SERVICE_NAME: embedded-me-demo-
-  ARTIFACTORY_REPO_NAME: py-rats-chest-repo
 
 jobs:
   setup-build-push-deploy:
@@ -18,7 +9,38 @@ jobs:
     permissions:
       packages: write
       contents: write
+
+    # Environment Variables (Consolidated)
+    env:
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_SERVICE_ACCOUNT: py-rats-chest-demo@niamhaiy.iam.gserviceaccount.com
+      GCP_REGION: us-central1 
+      IMAGE_NAME: py-rats-chest
+      IMAGE_TAG: latest
+      SERVICE_NAME_BASE: embedded-me-demo  # No trailing '-' for consistency
+      ARTIFACTORY_REPO_NAME: py-rats-chest-repo
+      AQUASEC_USERNAME: ${{ secrets.AQUASEC_USERNAME }}
+      AQUASEC_PASSWORD: ${{ secrets.AQUASEC_PASSWORD }}
+      AQUA_SERVER: ${{ secrets.AQUA_SERVER }}
+      AQUA_TOKEN: ${{ secrets.AQUA_TOKEN }}   
+      AQUA_SCANNER_TOKEN: ${{ secrets.AQUA_SCANNER_TOKEN }}
+      AQUA_SCANNER_HOST: ${{ secrets.AQUA_SCANNER_HOST }}
+      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+
     steps:
+      # **Description: Workflow to Build, Harden, Scan, Deploy, Test, and Tear Down a Cloud Run Service**
+      # 
+      # 1. Checks out code 
+      # 2. Pulls base image
+      # 3. Injects MicroEnforcer into image
+      # 4. Scans the hardened image with Aqua Scanner and registers in Aqua
+      # 5. Authenticates with Google Cloud and Artifact Registry
+      # 6. Pushes image to Artifact Registry
+      # 7. Deploys a unique instance to Cloud Run
+      # 8. Tests basic service functionality
+      # 9. Deletes the deployed Cloud Run service
+
       - name: Checkout code
         uses: actions/checkout@v2
 
@@ -27,35 +49,34 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}
+          password: ${{ env.GHCR_TOKEN }}  
 
       - name: Pull the Container Image
         run: docker pull ghcr.io/allthingsclowd/$IMAGE_NAME:$IMAGE_TAG
 
       - name: Inject MicroEnforcer with aquactl 
         run: |
-          wget --user ${{ secrets.AQUASEC_USERNAME }} --password ${{ secrets.AQUASEC_PASSWORD }} https://get.aquasec.com/aquactl/v3/aquactl 
+          wget --user $AQUASEC_USERNAME --password $AQUASEC_PASSWORD https://get.aquasec.com/aquactl/v3/aquactl 
           chmod +x aquactl
-          wget --user ${{ secrets.AQUASEC_USERNAME }} --password ${{ secrets.AQUASEC_PASSWORD }} https://download.aquasec.com/micro-enforcer/2022.4.460/x86/microenforcer
+          wget --user $AQUASEC_USERNAME --password $AQUASEC_PASSWORD https://download.aquasec.com/micro-enforcer/2022.4.460/x86/microenforcer
           chmod +x microenforcer 
-          sudo ./aquactl inject --src-image ghcr.io/allthingsclowd/$IMAGE_NAME:$IMAGE_TAG --dst-image ghcr.io/allthingsclowd/$IMAGE_NAME-embedded:$IMAGE_TAG --microenforcer-binary ./microenforcer --aqua-server ${{ secrets.AQUA_SERVER }} --aqua-token ${{ secrets.AQUA_TOKEN }}
-            
+          sudo ./aquactl inject --src-image ghcr.io/allthingsclowd/$IMAGE_NAME:$IMAGE_TAG --dst-image ghcr.io/allthingsclowd/${IMAGE_NAME}-embedded:$IMAGE_TAG --microenforcer-binary ./microenforcer --aqua-server $AQUA_SERVER --aqua-token $AQUA_TOKEN 
+
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v0.2.0
         with:
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          service_account_key: ${{ env.GCP_SA_KEY }}
           project_id: ${{ env.GCP_PROJECT_ID }}
           export_default_credentials: true
 
-      - name: Check and create Artifact Registry repository
+      - name: Check and Create Artifact Registry Repository
         run: | 
           gcloud artifacts repositories describe $ARTIFACTORY_REPO_NAME --location=us-central1 || gcloud artifacts repositories create $ARTIFACTORY_REPO_NAME --location=us-central1 --repository-format=docker 
 
-        # Note: Prerequisite --registry must exist in the Aqua Console for this to work
-      - name: Aqua Image Scanner - Scan Embedded Image and Register to Aqua Console # Note the --registry and --register-compliant command 
+      - name: Aqua Image Scanner - Scan Embedded Image and Register to Aqua Console
         run: |
               docker image ls
-              docker login registry.aquasec.com -u ${{ secrets.AQUASEC_USERNAME }} -p ${{ secrets.AQUASEC_PASSWORD }}
+              docker login registry.aquasec.com -u $AQUASEC_USERNAME -p $AQUASEC_PASSWORD
               docker pull registry.aquasec.com/scanner:2022.4
               docker run --rm -v $GITHUB_WORKSPACE:/tmp \
                     -v /var/run/docker.sock:/var/run/docker.sock \
@@ -63,8 +84,8 @@ jobs:
                     -e BUILD_JOB_NAME=$IMAGE_NAME-embedded \
                     registry.aquasec.com/scanner:2401.3.21 scan -w /tmp \
                       --socket docker \
-                      --host ${{ secrets.AQUA_SCANNER_HOST }} \
-                      --token ${{ secrets.AQUA_SCANNER_TOKEN }} \
+                      --host $AQUA_SCANNER_HOST \
+                      --token $AQUA_SCANNER_TOKEN \
                       --show-negligible \
                       --register-compliant \
                       --registry "us-central1-docker.pkg.dev" \
@@ -72,39 +93,40 @@ jobs:
                       --htmlfile /tmp/out.html \
                       --jsonfile /tmp/out.json \
                       > /dev/null
-                      
+
       - name: Authenticate Docker to Google Artifact Registry
         run: |  
             gcloud auth configure-docker us-central1-docker.pkg.dev  
-        
+
       - name: Tag and Push to Google Artifact Registry
         run: |
-            docker tag ghcr.io/allthingsclowd/$IMAGE_NAME-embedded:$IMAGE_TAG us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME-embedded:$IMAGE_TAG
-            docker push us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME-embedded:$IMAGE_TAG
-            
-      - name: Generate and set GCP_SERVICE_NAME
+            docker tag ghcr.io/allthingsclowd/${IMAGE_NAME}-embedded:$IMAGE_TAG us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/${IMAGE_NAME}-embedded:$IMAGE_TAG
+            docker push us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/${IMAGE_NAME}-embedded:$IMAGE_TAG
+
+      - name: Generate and Set GCP_SERVICE_NAME
         run: |
-            GCP_SERVICE_NAME="${SERVICE_NAME}$(tr -dc 'a-z0-9' </dev/urandom | head -c 5 2>/dev/null)"
+            GCP_SERVICE_NAME="${SERVICE_NAME_BASE}$(tr -dc 'a-z0-9' </dev/urandom | head -c 5 2>/dev/null)"
             echo "GCP_SERVICE_NAME=${GCP_SERVICE_NAME}" >> $GITHUB_ENV
 
       - name: Deploy to Cloud Run
         run: |
-            gcloud run deploy ${{ env.GCP_SERVICE_NAME }} \
-            --image us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME-embedded:$IMAGE_TAG \
+            gcloud run deploy ${GCP_SERVICE_NAME} \ 
+            --image us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/${IMAGE_NAME}-embedded:$IMAGE_TAG \
             --platform managed \
             --region $GCP_REGION \
             --allow-unauthenticated \
             --project $GCP_PROJECT_ID \
             --port 5000 \
             --set-env-vars CONTAINER_PORT=5000 \
-            --set-env-vars AQUA_LOGICAL_NAME=${{ env.GCP_SERVICE_NAME }} \
-            --set-env-vars AQUA_TOKEN=${{ secrets.AQUA_TOKEN }} \
-            --set-env-vars AQUA_SERVER=${{ secrets.AQUA_SERVER }} 
+            --set-env-vars AQUA_LOGICAL_NAME=${GCP_SERVICE_NAME} \  
+            --set-env-vars AQUA_TOKEN=$AQUA_TOKEN \
+            --set-env-vars AQUA_SERVER=$AQUA_SERVER 
 
       - name: Test container endpoints in cloud
         run: |
+            # Adjusted variables for consistency
             sleep 5 # Give it some time to start up
-            url=$(gcloud run services describe ${{ env.GCP_SERVICE_NAME }} --region=us-central1 --format="value(status.address.url)")
+            url=$(gcloud run services describe ${GCP_SERVICE_NAME} --region=us-central1 --format="value(status.address.url)")
             echo "Testing $url"
             curl -X POST --fail $url/generate_traffic || { echo 'generate_traffic test failed'; exit 1; }
             curl -X POST --fail $url/deploy_malware || { echo 'deploy_malware test failed'; exit 1; }
@@ -113,4 +135,4 @@ jobs:
 
       - name: Remove Service from Cloud Run
         run: |
-            gcloud run services delete ${{ env.GCP_SERVICE_NAME }} --region=$GCP_REGION --quiet
+            gcloud run services delete ${GCP_SERVICE_NAME} --region=$GCP_REGION --quiet 
