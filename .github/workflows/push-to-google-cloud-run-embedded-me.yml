@@ -65,7 +65,7 @@ jobs:
                       --token ${{ secrets.AQUA_SCANNER_TOKEN }} \
                       --show-negligible \
                       --local ghcr.io/allthingsclowd/$IMAGE_NAME-embedded:$IMAGE_TAG \
-                      --htmlfile /tmp/out.html 
+                      --htmlfile /tmp/out.html \
                       --jsonfile /tmp/out.json \
                       --register-compliant \
                       --registry us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME \
