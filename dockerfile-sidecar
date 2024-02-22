@@ -7,9 +7,9 @@ RUN ["/bin/microenforcer", "aqua-init"]
 VOLUME ["/.aquasec"]
 
 # Include the next line to embed an Image Profile
-ADD policy.json /.aquasec/policy/policy.json
+# ADD policy.json /.aquasec/policy/policy.json
 # Include the next line to embed a Firewall Policy
-ADD firewall.json /.aquasec/policy/firewall.json
+# ADD firewall.json /.aquasec/policy/firewall.json
 
 COPY microenforcer /.aquasec/bin/microenforcer
 
