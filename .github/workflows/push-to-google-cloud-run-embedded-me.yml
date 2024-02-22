@@ -66,12 +66,13 @@ jobs:
                       --show-negligible \
                       --local ghcr.io/allthingsclowd/$IMAGE_NAME-embedded:$IMAGE_TAG \
                       --htmlfile /tmp/out.html \
-                      --jsonfile /tmp/out.json \
-                      > /dev/null
+                      --jsonfile /tmp/out.json 
+                      
 
             # Removed from above statement - needs debugging
             # --register-compliant \
             # --registry ghcr.io/allthingsclowd/$IMAGE_NAME-embedded \
+            # --registry-type github \
 
 
       # - name: Authenticate Docker to Google Artifact Registry
