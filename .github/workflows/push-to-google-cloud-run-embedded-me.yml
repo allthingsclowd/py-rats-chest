@@ -65,15 +65,16 @@ jobs:
                       --host ${{ secrets.AQUA_SCANNER_HOST }} \
                       --token ${{ secrets.AQUA_SCANNER_TOKEN }} \
                       --show-negligible \
+                      --register-compliant \
+                      --registry "https://ghcr.io/ \
                       --local ghcr.io/allthingsclowd/$IMAGE_NAME-embedded:$IMAGE_TAG \
                       --htmlfile /tmp/out.html \
-                      --jsonfile /tmp/out.json 
+                      --jsonfile /tmp/out.json \
+                      > /dev/null
                       
 
-            # Removed from above statement - needs debugging
-            # --register-compliant \
-            # --registry ghcr.io/allthingsclowd/$IMAGE_NAME-embedded \
-            # --registry-type github \
+            
+
 
 
       # - name: Authenticate Docker to Google Artifact Registry
