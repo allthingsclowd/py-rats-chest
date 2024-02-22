@@ -34,7 +34,7 @@ jobs:
 
       - name: Inject MicroEnforcer with aquactl 
         run: |
-          wget --user  --password ${{ secrets.AQUASEC_PASSWORD }} https://get.aquasec.com/aquactl/v3/aquactl 
+          wget --user ${{ secrets.AQUASEC_USERNAME }} --password ${{ secrets.AQUASEC_PASSWORD }} https://get.aquasec.com/aquactl/v3/aquactl 
           chmod +x aquactl
           wget --user ${{ secrets.AQUASEC_USERNAME }} --password ${{ secrets.AQUASEC_PASSWORD }} https://download.aquasec.com/micro-enforcer/2022.4.460/x86/microenforcer
           chmod +x microenforcer 
