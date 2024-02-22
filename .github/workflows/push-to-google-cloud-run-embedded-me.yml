@@ -9,7 +9,7 @@ env:
   GCP_REGION: us-central1 
   IMAGE_NAME: py-rats-chest
   IMAGE_TAG: latest
-  SERVICE_NAME: Embedded-ME-Service-
+  SERVICE_NAME: embedded-me-demo-
   ARTIFACTORY_REPO_NAME: py-rats-chest-repo
 
 jobs:
@@ -84,7 +84,7 @@ jobs:
 
       - name: Deploy to Cloud Run
         run: |
-            SERVICE_NAME="${SERVICE_NAME}$(tr -dc 'a-zA-Z0-9' </dev/urandom | head -c 5)"
+            SERVICE_NAME="${SERVICE_NAME}$(tr -dc 'a-z0-9' </dev/urandom | head -c 5)"
             gcloud run deploy $SERVICE_NAME \
             --image us-central1-docker.pkg.dev/$GCP_PROJECT_ID/$ARTIFACTORY_REPO_NAME/$IMAGE_NAME-embedded:$IMAGE_TAG \
             --platform managed \
