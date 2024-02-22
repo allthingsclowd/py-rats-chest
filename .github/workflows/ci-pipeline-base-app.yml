@@ -3,7 +3,13 @@ name: Build, Push Docker image, Test and Tag
 on:
   push:
     branches:
-      - grazzer # Adjust this as necessary
+      - grazzer
+  workflow_dispatch:
+    inputs:
+      branchName:
+        description: 'Branch Name (manual trigger)' 
+        required: true
+        default: 'grazzer'
 
 jobs:
   build-test-push:
@@ -64,7 +70,7 @@ jobs:
 
     - name: Build and Push the Docker image
       run: |
-        docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}:${{ steps.next-version.outputs.version }}-red-team -t ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}:${{ steps.next-version.outputs.version }}-green-team -t ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}:${{ steps.next-version.outputs.version }} -t ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}:latest . --push
+        docker buildx build --platform linux/amd64 -t ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}:${{ steps.next-version.outputs.version }}-red-team -t ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}:${{ steps.next-version.outputs.version }}-green-team -t ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}:${{ steps.next-version.outputs.version }} -t ghcr.io/allthingsclowd/${{ env.BRANCH_SPECIFIC_VAR }}:latest . --push
 
     - name: Run container for testing
       run: |
