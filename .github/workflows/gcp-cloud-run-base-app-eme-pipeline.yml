@@ -89,7 +89,7 @@ jobs:
               --token ${{ secrets.AQUA_SCANNER_TOKEN }} \
               --show-negligible \
               --register-compliant \
-              --registry "us-central1-docker.pkg.dev" \
+              --registry "Google" \
               --local ghcr.io/allthingsclowd/$IMAGE_NAME-embedded:$IMAGE_TAG \
               --htmlfile /tmp/out.html \
               --jsonfile /tmp/out.json \
