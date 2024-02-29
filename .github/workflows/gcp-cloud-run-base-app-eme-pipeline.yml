@@ -125,8 +125,7 @@ jobs:
           --set-env-vars AQUA_LOGICAL_NAME=${{ env.GCP_SERVICE_NAME }} \
           --set-env-vars AQUA_TOKEN=${{ secrets.AQUA_TOKEN }} \
           --set-env-vars AQUA_SERVER=${{ secrets.AQUA_SERVER }} \
-          --set-env-vars AQUA_MICROENFORCER=1 \ 
-          --set-env-vars LD_PRELOAD="/.aquasec/bin/$PLATFORM/slklib.so" \
+          --set-env-vars AQUA_MICROENFORCER=1 \
           --set-env-vars AQUA_DEBUG_LEVEL=3 \
           --set-env-vars AQUA_DEBUG_TYPE=STDOUT
 
