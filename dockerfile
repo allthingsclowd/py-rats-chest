@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN chmod +x eicar_test_file.txt
 
 # Expose dummy credentials file
-RUN chmod 777 credentials
+RUN chmod 777 fake_credentials
 
 # Make port 5000 available to the world outside this container
 EXPOSE 5000
